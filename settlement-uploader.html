@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settlement Report Uploader - Local</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .upload-section {
+            margin-bottom: 30px;
+        }
+        
+        .upload-section h2 {
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .drop-zone:hover {
+            border-color: #764ba2;
+            background: #f0f0f0;
+        }
+        
+        .drop-zone.active {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+        
+        .drop-zone svg {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        .drop-zone p {
+            color: #666;
+            margin: 10px 0;
+        }
+        
+        .drop-zone .file-input {
+            display: none;
+        }
+        
+        .file-name {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+        
+        .file-size {
+            color: #999;
+            font-size: 0.85em;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .info-box p {
+            color: #1565c0;
+            font-size: 0.95em;
+            margin: 5px 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .upload-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #666;
+            margin-top: 10px;
+            font-size: 0.95em;
+        }
+        
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            color: #2e7d32;
+            display: block;
+        }
+        
+        .status-message.error {
+            background: #ffebee;
+            border-left: 5px solid #f44336;
+            color: #c62828;
+            display: block;
+        }
+        
+        .status-message.info {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            color: #1565c0;
+            display: block;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .token-section {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .token-section p {
+            color: #856404;
+            font-size: 0.95em;
+            margin: 5px 0;
+        }
+
+        .token-section a {
+            color: #0056b3;
+            text-decoration: none;
+        }
+
+        .token-section a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Settlement Report Uploader</h1>
+            <p>Upload your settlement CSV files (up to 500MB)</p>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <p><strong>✓ Works offline</strong> - Save this file and use anytime</p>
+                <p><strong>✓ Handles large files</strong> - Up to 500MB</p>
+                <p><strong>✓ No size limit</strong> - Upload directly from your computer</p>
+            </div>
+
+            <div class="token-section">
+                <p><strong>⚠️ First Time Setup Only:</strong></p>
+                <p>1. Go to: <a href="https://github.com/settings/tokens?type=beta" target="_blank">Create Personal Access Token</a></p>
+                <p>2. Give it name: "Settlement Uploader"</p>
+                <p>3. Grant permission: <strong>repo</strong> (full access)</p>
+                <p>4. Click "Generate token" and copy it</p>
+                <p>5. Paste it below - it will be saved locally on your computer only</p>
+            </div>
+            
+            <form id="uploadForm">
+                <div class="upload-section">
+                    <h2>GitHub Access Token</h2>
+                    <div class="form-group">
+                        <label for="githubToken">Your GitHub Personal Access Token:</label>
+                        <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxx" required />
+                        <small style="color: #999; margin-top: 5px; display: block;">
+                            🔐 Saved locally on your computer only. Never shared.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="upload-section">
+                    <h2>Select Your Settlement CSV File</h2>
+                    <div class="drop-zone" id="dropZone">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p><strong>Drag and drop your CSV file here</strong></p>
+                        <p>or click to select a file</p>
+                        <p class="file-name" id="fileName"></p>
+                        <p class="file-size" id="fileSize"></p>
+                        <input type="file" id="fileInput" class="file-input" accept=".csv" />
+                    </div>
+                </div>
+                
+                <div class="upload-section">
+                    <h2>File Details</h2>
+                    <div class="form-group">
+                        <label for="settlementDate">Settlement Date (YYYY-MM-DD):</label>
+                        <input type="date" id="settlementDate" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="merchantName">Merchant Name:</label>
+                        <input type="text" id="merchantName" placeholder="e.g., Grab Philippines" required />
+                    </div>
+                </div>
+                
+                <button type="submit" class="upload-btn" id="uploadBtn">📤 Upload & Process</button>
+                
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">0%</div>
+                </div>
+                
+                <div class="status-message" id="statusMessage"></div>
+            </form>
+        </div>
+        
+        <div class="footer">
+            <p>Results will be saved to your GitHub repository automatically</p>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('uploadForm');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const statusMessage = document.getElementById('statusMessage');
+        const githubToken = document.getElementById('githubToken');
+        
+        let selectedFile = null;
+        
+        // Load token from local storage
+        window.addEventListener('load', () => {
+            const savedToken = localStorage.getItem('github_token');
+            if (savedToken) {
+                githubToken.value = savedToken;
+            }
+        });
+        
+        // Save token when changed
+        githubToken.addEventListener('change', () => {
+            localStorage.setItem('github_token', githubToken.value);
+        });
+        
+        // Drag and drop
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('active');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('active');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files[0]);
+        });
+        
+        function handleFileSelect(file) {
+            if (!file || !file.name.endsWith('.csv')) {
+                showStatus('Please select a CSV file', 'error');
+                return;
+            }
+            
+            selectedFile = file;
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileName.textContent = `✓ ${file.name}`;
+            fileSize.textContent = `${sizeMB} MB`;
+            dropZone.style.borderColor = '#4caf50';
+            dropZone.style.background = '#e8f5e9';
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!githubToken.value) {
+                showStatus('Please enter your GitHub Personal Access Token', 'error');
+                return;
+            }
+            
+            if (!selectedFile) {
+                showStatus('Please select a file first', 'error');
+                return;
+            }
+            
+            const settlementDate = document.getElementById('settlementDate').value;
+            const merchantName = document.getElementById('merchantName').value;
+            
+            if (!settlementDate || !merchantName) {
+                showStatus('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            uploadBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            statusMessage.classList.remove('success', 'error');
+            statusMessage.classList.add('info');
+            statusMessage.textContent = '⏳ Uploading to GitHub...';
+            
+            try {
+                // Convert file to base64
+                const base64 = await fileToBase64(selectedFile);
+                
+                // Update progress
+                progressFill.style.width = '50%';
+                progressText.textContent = '50%';
+                statusMessage.textContent = '⏳ Processing on GitHub...';
+                
+                // Upload to GitHub API
+                await uploadToGitHub(base64, selectedFile.name, settlementDate, merchantName, githubToken.value);
+                
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                showStatus(`✅ File uploaded successfully!\n\n📍 Check your GitHub repository for results in 1-3 minutes.\n\nGo to: https://github.com/diannenino-sys/projects/actions`, 'success');
+                form.reset();
+                fileName.textContent = '';
+                fileSize.textContent = '';
+                selectedFile = null;
+                dropZone.style.borderColor = '#667eea';
+                dropZone.style.background = '#f8f9fa';
+                
+            } catch (error) {
+                showStatus(`❌ Upload failed: ${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                progressContainer.style.display = 'none';
+                progressFill.style.width = '0%';
+                progressText.textContent = '0%';
+            }
+        });
+        
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        async function uploadToGitHub(base64Content, filename, settlementDate, merchantName, token) {
+            const owner = 'diannenino-sys';
+            const repo = 'projects';
+            const path = `settlement_data/${filename}`;
+            const message = `📊 Add settlement report: ${filename} (${settlementDate})`;
+            
+            // GitHub API endpoint
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    content: base64Content,
+                    branch: 'settlement-automation'
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                if (response.status === 401) {
+                    throw new Error('Invalid GitHub token. Please check your Personal Access Token.');
+                }
+                throw new Error(error.message || `GitHub API error: ${response.status}`);
+            }
+            
+            return response.json();
+        }
+        
+        function showStatus(message, type) {
+            statusMessage.innerHTML = message.replace(/\n/g, '<br>');
+            statusMessage.className = `status-message ${type}`;
+        }
+        
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('settlementDate').value = today;
+    </script>
+</body>
+</html>
